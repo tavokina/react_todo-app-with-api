@@ -97,13 +97,16 @@ export const App: React.FC = () => {
   const onToggle = (todo: Todo) => {
     setLoadingIds(prev => [...prev, todo.id]);
     const toggled = { ...todo, completed: !todo.completed };
+
     todoService
       .updateTodo(toggled)
       .then(toggledTodo => {
-        setTodos(prev => prev.map(t => t.id === toggledTodo.id ? toggledTodo : t))
+        setTodos(prev =>
+          prev.map(t => (t.id === toggledTodo.id ? toggledTodo : t)),
+        );
       })
       .catch(() => setErrorMessage(ERROR_MESSAGES.update))
-      .finally(() => setLoadingIds(prev => prev.filter(id => id !== todo.id)))
+      .finally(() => setLoadingIds(prev => prev.filter(id => id !== todo.id)));
   };
 
   const toggleAll = () => {
@@ -116,19 +119,21 @@ export const App: React.FC = () => {
 
   const onUpdate = (updatedTodo: Todo) => {
     setLoadingIds(prev => [...prev, updatedTodo.id]);
+
     return todoService
       .updateTodo(updatedTodo)
-      .then(() => setTodos(
-        prev => prev.map(
-          t => t.id === updatedTodo.id
-            ? updatedTodo
-            : t
-        )))
+      .then(() =>
+        setTodos(prev =>
+          prev.map(t => (t.id === updatedTodo.id ? updatedTodo : t)),
+        ),
+      )
       .catch(() => {
         setErrorMessage(ERROR_MESSAGES.update);
         throw new Error();
       })
-      .finally(() => setLoadingIds(prev => prev.filter(id => id !== updatedTodo.id)));
+      .finally(() =>
+        setLoadingIds(prev => prev.filter(id => id !== updatedTodo.id)),
+      );
   };
 
   if (!todoService.USER_ID) {
@@ -142,14 +147,14 @@ export const App: React.FC = () => {
       <div className="todoapp__content">
         <header className="todoapp__header">
           {/* this button should have `active` class only if all todos are completed */}
-          {todos.length > 0  && (
+          {todos.length > 0 && (
             <button
-            type="button"
-            className={classNames('todoapp__toggle-all', {
-              active: isAllCompleted,
-            })}
-            data-cy="ToggleAllButton"
-            onClick={toggleAll}
+              type="button"
+              className={classNames('todoapp__toggle-all', {
+                active: isAllCompleted,
+              })}
+              data-cy="ToggleAllButton"
+              onClick={toggleAll}
             />
           )}
 

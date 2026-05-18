@@ -7,14 +7,14 @@ type Props = {
   deleteItem: (id: number) => void;
   isLoading: boolean;
   isComplete: (obj: Todo) => void;
-  isChange: (obj: Todo) => Promise<void>
+  isChange: (obj: Todo) => Promise<void>;
 };
 export const TodoItem: React.FC<Props> = ({
   todo,
   deleteItem,
   isLoading,
   isComplete,
-  isChange
+  isChange,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(todo.title);
@@ -23,7 +23,7 @@ export const TodoItem: React.FC<Props> = ({
   const isCancelledRef = useRef<boolean>(false);
 
   useEffect(() => {
-      editInputRef.current?.focus();
+    editInputRef.current?.focus();
   }, [isEditing]);
 
   const handleSubmit = () => {
@@ -31,20 +31,20 @@ export const TodoItem: React.FC<Props> = ({
 
     if (!normalizedTitle) {
       deleteItem(todo.id);
+
       return;
-    };
+    }
 
     if (normalizedTitle !== todo.title) {
       isChange({ ...todo, title: editingTitle.trim() })
         .then(() => setIsEditing(false))
-        .catch(() => editInputRef.current?.focus())
-    };
+        .catch(() => editInputRef.current?.focus());
+    }
 
     if (normalizedTitle === todo.title) {
       setIsEditing(false);
-    };
-  }
-
+    }
+  };
 
   return (
     /* eslint-disable jsx-a11y/label-has-associated-control */
@@ -64,23 +64,23 @@ export const TodoItem: React.FC<Props> = ({
 
       {!isEditing && (
         <>
-        <span
-          data-cy="TodoTitle"
-          className="todo__title"
-          onDoubleClick={() => setIsEditing(true)}
-        >
-        {todo.title}
-        </span>
+          <span
+            data-cy="TodoTitle"
+            className="todo__title"
+            onDoubleClick={() => setIsEditing(true)}
+          >
+            {todo.title}
+          </span>
 
-        <button
-          type="button"
-          className="todo__remove"
-          data-cy="TodoDelete"
-          onClick={() => {
-            deleteItem(todo.id);
-          }}
-        >
-          ×
+          <button
+            type="button"
+            className="todo__remove"
+            data-cy="TodoDelete"
+            onClick={() => {
+              deleteItem(todo.id);
+            }}
+          >
+            ×
           </button>
         </>
       )}
@@ -99,14 +99,15 @@ export const TodoItem: React.FC<Props> = ({
             placeholder="Empty todo will be deleted"
             value={editingTitle}
             ref={editInputRef}
-            onChange={(e) => setEditingTitle(e.target.value)}
+            onChange={e => setEditingTitle(e.target.value)}
             onBlur={() => {
               if (!isCancelledRef.current) {
                 handleSubmit();
               }
+
               isCancelledRef.current = false;
             }}
-            onKeyUp={(e) => {
+            onKeyUp={e => {
               if (e.key === 'Escape') {
                 setIsEditing(false);
                 setEditingTitle(todo.title);

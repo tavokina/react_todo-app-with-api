@@ -6,7 +6,7 @@ type Props = {
   onDelete: (id: number) => void;
   loadingIds: number[];
   onChecked: (obj: Todo) => void;
-  onChange: (obj: Todo) => Promise<void>
+  onChange: (obj: Todo) => Promise<void>;
 };
 
 export const TodoList: React.FC<Props> = ({
@@ -14,7 +14,7 @@ export const TodoList: React.FC<Props> = ({
   onDelete,
   loadingIds,
   onChecked,
-  onChange
+  onChange,
 }) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
