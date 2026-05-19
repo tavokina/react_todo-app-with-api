@@ -22,10 +22,6 @@ export const TodoItem: React.FC<Props> = ({
   const editInputRef = useRef<HTMLInputElement>(null);
   const isCancelledRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    editInputRef.current?.focus();
-  }, [isEditing]);
-
   const handleSubmit = () => {
     const normalizedTitle = editingTitle.trim();
 
@@ -45,6 +41,27 @@ export const TodoItem: React.FC<Props> = ({
       setIsEditing(false);
     }
   };
+
+  const submitOnBlur = () => {
+    if (!isCancelledRef.current) {
+      handleSubmit();
+    }
+
+    isCancelledRef.current = false;
+  };
+
+  const cancelSubmit = (eventKey: string) => {
+    if (eventKey === 'Escape') {
+      setIsEditing(false);
+      setEditingTitle(todo.title);
+      isCancelledRef.current = true;
+    }
+  };
+
+  useEffect(() => {
+    editInputRef.current?.focus();
+  }, [isEditing]);
+
 
   return (
     /* eslint-disable jsx-a11y/label-has-associated-control */
@@ -100,20 +117,8 @@ export const TodoItem: React.FC<Props> = ({
             value={editingTitle}
             ref={editInputRef}
             onChange={e => setEditingTitle(e.target.value)}
-            onBlur={() => {
-              if (!isCancelledRef.current) {
-                handleSubmit();
-              }
-
-              isCancelledRef.current = false;
-            }}
-            onKeyUp={e => {
-              if (e.key === 'Escape') {
-                setIsEditing(false);
-                setEditingTitle(todo.title);
-                isCancelledRef.current = true;
-              }
-            }}
+            onBlur={submitOnBlur}
+            onKeyUp={e => cancelSubmit(e.key)}
           />
         </form>
       )}

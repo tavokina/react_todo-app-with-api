@@ -8,19 +8,14 @@ import classNames from 'classnames';
 import { TodoList } from './components/TodoList';
 import { TodoItem } from './components/TodoItem';
 import { NewTodo } from './types/NewTodo';
-
-const ERROR_MESSAGES = {
-  load: 'Unable to load todos',
-  title: 'Title should not be empty',
-  add: 'Unable to add a todo',
-  delete: 'Unable to delete a todo',
-  update: 'Unable to update a todo',
-};
+import { ErrorMessages } from './types/ErrorMessages';
+import { Status } from './types/Status';
+import { Filter } from './components/Filter';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState('');
-  const [status, setStatus] = useState('');
+  const [todoStatus, setTodoStatus] = useState(Status.All);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
@@ -29,16 +24,17 @@ export const App: React.FC = () => {
   const isAllCompleted = todos.every(todo => todo.completed);
   const hasCompleted = todos.some(todo => todo.completed);
   const filteringByStatus = todos.filter(todo => {
-    if (status === 'active') {
+    if (todoStatus === Status.Active) {
       return !todo.completed;
     }
 
-    if (status === 'completed') {
+    if (todoStatus === Status.Completed) {
       return todo.completed;
     }
 
     return true;
   });
+
   const newTodo = (todoTitle: string): NewTodo => {
     return {
       userId: todoService.USER_ID,
@@ -47,12 +43,38 @@ export const App: React.FC = () => {
     };
   };
 
+  const handleAppSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!normalizedTitle) {
+      setErrorMessage(ErrorMessages.Title);
+
+      return;
+    }
+
+    setTempTodo({
+      ...newTodo(normalizedTitle),
+      id: 0,
+    });
+    todoService
+      .addTodo(newTodo(normalizedTitle))
+      .then(addedTodo => {
+        setTodos([...todos, addedTodo]);
+        setTitle('');
+        setTempTodo(null);
+      })
+      .catch(() => {
+        setErrorMessage(ErrorMessages.Add);
+        setTempTodo(null);
+      });
+  };
+
   /* get todos */
   useEffect(() => {
     todoService
       .getTodos()
       .then(setTodos)
-      .catch(() => setErrorMessage(ERROR_MESSAGES.load));
+      .catch(() => setErrorMessage(ErrorMessages.Load));
   }, []);
 
   /* errors */
@@ -80,7 +102,7 @@ export const App: React.FC = () => {
       .deleteTodo(todoId)
       .then(() => setTodos(prev => prev.filter(todo => todo.id !== todoId)))
       .catch(() => {
-        setErrorMessage(ERROR_MESSAGES.delete);
+        setErrorMessage(ErrorMessages.Delete);
         setTempTodo(null);
       })
       .finally(() => {
@@ -105,7 +127,7 @@ export const App: React.FC = () => {
           prev.map(t => (t.id === toggledTodo.id ? toggledTodo : t)),
         );
       })
-      .catch(() => setErrorMessage(ERROR_MESSAGES.update))
+      .catch(() => setErrorMessage(ErrorMessages.Update))
       .finally(() => setLoadingIds(prev => prev.filter(id => id !== todo.id)));
   };
 
@@ -117,6 +139,7 @@ export const App: React.FC = () => {
     return todos.forEach(todo => onToggle(todo));
   };
 
+  /* update */
   const onUpdate = (updatedTodo: Todo) => {
     setLoadingIds(prev => [...prev, updatedTodo.id]);
 
@@ -128,7 +151,7 @@ export const App: React.FC = () => {
         ),
       )
       .catch(() => {
-        setErrorMessage(ERROR_MESSAGES.update);
+        setErrorMessage(ErrorMessages.Update);
         throw new Error();
       })
       .finally(() =>
@@ -159,33 +182,7 @@ export const App: React.FC = () => {
           )}
 
           {/* Add a todo on form submit */}
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-
-              if (!normalizedTitle) {
-                setErrorMessage(ERROR_MESSAGES.title);
-
-                return;
-              }
-
-              setTempTodo({
-                ...newTodo(normalizedTitle),
-                id: 0,
-              });
-              todoService
-                .addTodo(newTodo(normalizedTitle))
-                .then(addedTodo => {
-                  setTodos([...todos, addedTodo]);
-                  setTitle('');
-                  setTempTodo(null);
-                })
-                .catch(() => {
-                  setErrorMessage(ERROR_MESSAGES.add);
-                  setTempTodo(null);
-                });
-            }}
-          >
+          <form onSubmit={e => handleAppSubmit(e)}>
             <input
               data-cy="NewTodoField"
               type="text"
@@ -225,40 +222,7 @@ export const App: React.FC = () => {
             </span>
 
             {/* Active link should have the 'selected' class */}
-            <nav className="filter" data-cy="Filter">
-              <a
-                href="#/"
-                className={classNames('filter__link', {
-                  selected: status === '',
-                })}
-                data-cy="FilterLinkAll"
-                onClick={() => setStatus('')}
-              >
-                All
-              </a>
-
-              <a
-                href="#/active"
-                className={classNames('filter__link', {
-                  selected: status === 'active',
-                })}
-                data-cy="FilterLinkActive"
-                onClick={() => setStatus('active')}
-              >
-                Active
-              </a>
-
-              <a
-                href="#/completed"
-                className={classNames('filter__link', {
-                  selected: status === 'completed',
-                })}
-                data-cy="FilterLinkCompleted"
-                onClick={() => setStatus('completed')}
-              >
-                Completed
-              </a>
-            </nav>
+            <Filter todoStatus={todoStatus} onChangeStatus={setTodoStatus} />
 
             {/* this button should be disabled if there are no completed todos */}
             <button
